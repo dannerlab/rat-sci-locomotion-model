@@ -1,0 +1,44 @@
+model_file_name: RM_final.txt
+sigma: 1.1
+alpha_range: [0.4,1.]
+simulation:
+  type: up_down
+  N_rep: 25
+  duration: 8.
+  alpha_range_reduction:  0.25
+case: _contusion
+variable_groups:
+  all_fore_drives: [driveI_to_dV0Ddiag,driveI_to_V0V_f,driveI_to_V0D_f]
+  all_hind_drives: [driveI_to_V0V_h,driveI_to_V0D_h]
+  all_LPN_vars: [aV3diagtoRGF, dV0VdiagtoRGF, aSh2toRGF, dSh2toRGF, dLPNitoRGF]
+  RGF_drive_vars: [drive_to_RGF]
+  V0V_drive_vars: [driveI_to_V0V] 
+  V0D_drive_offset_vars: [driveI_to_V0D_offset]
+  V0D_drive_vars: [driveI_to_V0D]
+  V0V_drive_offset_vars: [driveI_to_V0V_offset]
+update: 
+- name: LPNs
+  variable_group: all_LPN_vars
+  postfix: [_L,_R]
+  factor: 0.05
+- name: f_drives
+  variable_group: all_fore_drives
+  postfix: [_L,_R]
+  factor: 0.33
+- name: h_drives
+  variable_group: all_hind_drives
+  postfix: [_L,_R]
+  factor: 0
+- name: h_V0V_drive_off
+  variable_group: V0V_drive_offset_vars
+  postfix: [_h_L,_h_R]
+  value: .3
+- name: h_V0D_drive_off
+  variable_group: V0D_drive_offset_vars
+  postfix: [_h_L,_h_R]
+  value: 2
+- name: h_RGF_drive
+  variable_group: RGF_drive_vars
+  postfix: [_h_R,_h_L]
+  factor: 1
+

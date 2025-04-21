@@ -1,0 +1,33 @@
+model_file_name: RM_final.txt
+sigma: 1.1
+alpha_range: [0.5,1.0]
+simulation:
+  type: up_down
+  N_rep: 25
+  duration: 8.
+  alpha_range_reduction:  0.4
+case: _hemi
+variable_groups:
+  LPN_hemi_vars: [aV3diagtoRGF_L,dV0DdiagtoRGF_L, dV0VdiagtoRGF_L, aSh2toRGF_R, dSh2toRGF_R, dLPNitoRGF_R]
+  LPN_intact_vars: [aV3diagtoRGF_R,dV0DdiagtoRGF_R, dV0VdiagtoRGF_R, aSh2toRGF_L, dSh2toRGF_L, dLPNitoRGF_L]
+  RGF_drive_vars: [drive_to_RGF]
+  V0V_drive_vars: [driveI_to_V0V]
+update: 
+- name: LPN_hemi_vars
+  variable_group: LPN_hemi_vars
+  factor: 0.4
+- name: LPN_intact_vars
+  variable_group: LPN_intact_vars
+  factor: 1
+- name: ipsilesional_hind_RGF_drive
+  variable_group: RGF_drive_vars
+  postfix: [_h_R]
+  factor: .9
+- name: V0V_drive_vars_h
+  variable_group: V0V_drive_vars
+  postfix: [_h_L,_h_R]
+  factor: 0.5
+- name: V0V_drive_vars_f
+  variable_group: V0V_drive_vars
+  postfix: [_f_R,_f_L]
+  factor: 0.5
