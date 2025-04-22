@@ -212,7 +212,7 @@ cp.pop(7)
 
 if __name__ == "__main__":
     parser = OptionParser()
-    parser.add_option("-y", "--yaml", dest="yaml_fn",default='config_test.yaml')
+    parser.add_option("-y", "--yaml", dest="yaml_fn",default='./models/config_intact_final.yaml')
     options, args = parser.parse_args()
 
     neurons = ["RGF_NaP_hind_L", "RGF_NaP_hind_R",      # neurons to be read every time step 

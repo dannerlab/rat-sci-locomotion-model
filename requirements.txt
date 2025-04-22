@@ -1,0 +1,10 @@
+CPGNetworkSimulator @ git+https://github.com/SimonDanner/CPGNetworkSimulator@e969c22
+numpy
+matplotlib
+pandas
+seaborn
+scipy
+lmfit
+pyyaml
+tables
+scikit-learn
