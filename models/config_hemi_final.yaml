@@ -1,11 +1,11 @@
 model_file_name: RM_final.txt
 sigma: 1.1
-alpha_range: [0.5,1.0]
+alpha_range: [0.4,1.0]
 simulation:
   type: up_down
   N_rep: 25
   duration: 8.
-  alpha_range_reduction:  0.4
+  alpha_range_reduction:  0.25
 case: _hemi
 variable_groups:
   LPN_hemi_vars: [aV3diagtoRGF_L,dV0DdiagtoRGF_L, dV0VdiagtoRGF_L, aSh2toRGF_R, dSh2toRGF_R, dLPNitoRGF_R]

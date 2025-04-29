@@ -10,7 +10,7 @@ case: _contusion
 variable_groups:
   all_fore_drives: [driveI_to_dV0Ddiag,driveI_to_V0V_f,driveI_to_V0D_f]
   all_hind_drives: [driveI_to_V0V_h,driveI_to_V0D_h]
-  all_LPN_vars: [aV3diagtoRGF, dV0VdiagtoRGF, aSh2toRGF, dSh2toRGF, dLPNitoRGF]
+  all_LPN_vars: [aV3diagtoRGF, dV0DdiagtoRGF, dV0VdiagtoRGF, aSh2toRGF, dSh2toRGF, dLPNitoRGF]
   RGF_drive_vars: [drive_to_RGF]
   V0V_drive_vars: [driveI_to_V0V] 
   V0D_drive_offset_vars: [driveI_to_V0D_offset]

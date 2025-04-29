@@ -37,7 +37,7 @@ Use Jupyter notebook `analyze_results.ipynb`. [![Open In Colab](https://colab.re
 
 ### Model files
 
-- `models/RM_final.txt`: Neural network configuration file (for [CPGNetworkSimulator][https://github.com/SimonDanner/CPGNetworkSimulator]) of pre-injury model 
+- `models/RM_final.txt`: Neural network configuration file (for [CPGNetworkSimulator](https://github.com/SimonDanner/CPGNetworkSimulato)) of pre-injury model. Model is based on our previous models or mouse spinal locomotor circuitry ([Danner et al. 2017][danner-2017-link]; [Zhang et al. 2022][zhang-2022-link]).
 
 - `models/*.yaml`: Simulation configuration files for the various cases [intact/pre-injury, hemisection (including partial manipulations), contusion]. These files specify simulation paramters and patch connection weights and drive parameters of the model config file (RM_final.txt) to simulate injury conditions.
 
@@ -60,14 +60,18 @@ Data licensed under Creative Commons Attribution-ShareAlike 4.0 International Li
 Source code licensed under GNU GPL v3 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)][gpl3]
 
 ## References
-Danner SM, Shepard CT, Hainline C, Shevtosva NA, Rybak IA, Magnuson DSK. (2023). **Spinal control of locomotion before and after spinal cord injury**. *Experimental Neurology, 368*, 114496. doi: [10.1016/j.expneurol.2023.114496](https://doi.org/10.1016/j.expneurol.2023.114496). Preprint: *bioRxiv*, 2023.03.22.533794; doi: [10.1101/2023.03.22.533794](https://doi.org/10.1101/2023.03.22.533794)
+Danner SM, Shepard CT, Hainline C, Shevtosva NA, Rybak IA, Magnuson DSK. **Spinal control of locomotion before and after spinal cord injury**. *Experimental Neurology*. 2016;*368*, 114496. doi: [10.1016/j.expneurol.2023.114496][danner-2023-link]
+
+Danner SM, Shevtsova NA, Frigon A, Rybak IA. **Computational modeling of spinal circuits controlling limb coordination and gaits in quadrupeds**. *eLife*. 2017;*6*:e31050. doi: [10.7554/eLife.31050][danner-2017-link]
+
+Zhang H, Shevtsova NA, Deska-Gauthier D, Mackay C, Dougherty KJ, Danner SM, Zhang Y, Rybak IA. **The role of V3 neurons in speed-dependent interlimb coordination during locomotion in mice**. *eLife*. 2022;*11*:e73424. doi: [10.7554/eLife.73424][zhang-2022-link]
 
 [gpl3]: https://www.gnu.org/licenses/gpl-3.0
 [cc-by-sa]: http://creativecommons.org/licenses/by-sa/4.0/
 [cc-by-sa-shield]: https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg
 
-
+[danner-2017-link]: https://doi.org/10.7554/eLife.31050
+[zhang-2022-link]: https://doi.org/10.7554/eLife.73424
 [danner-2023-link]: https://doi.org/10.1016/j.expneurol.2023.114496
 [colab-link_analysis]: https://colab.research.google.com/github/dannerlab/rat-sci-locomotion-model/blob/master/analyze_results.ipynb
 [colab-link_bifurcations]: https://colab.research.google.com/github/dannerlab/rat-sci-locomotion-model/blob/master/bifurcation_diagrams.ipynb
-[binder-link]: https://mybinder.org/v2/gh/dannerlab/rat-sci-locomotion/HEAD?labpath=Analysis.ipynb
