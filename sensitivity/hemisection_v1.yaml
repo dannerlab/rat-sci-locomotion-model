@@ -1,0 +1,21 @@
+model_yaml: ./models/config_hemi_final.yaml
+m_samples: 11
+m_samples_val: 8
+update_method: variable_groups
+scoring_fn: js
+scale_exp: 2
+variable_groups:
+  LPN_hemi_vars: [aV3diagtoRGF_L, dV0DdiagtoRGF_L, dV0VdiagtoRGF_L, aSh2toRGF_R, dSh2toRGF_R,
+    dLPNitoRGF_R]
+  LPN_intact_vars: [aV3diagtoRGF_R, dV0DdiagtoRGF_R, dV0VdiagtoRGF_R, aSh2toRGF_L,
+    dSh2toRGF_L, dLPNitoRGF_L]
+  ipsilesional_hind_RGF_drive: [drive_to_RGF_h_R]
+  V0V_drive_vars_h: [driveI_to_V0V_h_L, driveI_to_V0V_h_R]
+  V0V_drive_vars_f: [driveI_to_V0V_f_L, driveI_to_V0V_f_R]
+run:
+- entry: 1
+  out_filename: ./sensitivity/hemisection_v12025-08-08-16-47-33
+  datetime: '2025-08-08 16:51:03'
+- entry: 2
+  out_filename: ./sensitivity/hemisection_v12025-08-08-16-57-08
+  datetime: '2025-08-08 17:00:28'
