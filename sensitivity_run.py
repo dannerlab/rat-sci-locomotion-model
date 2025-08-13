@@ -298,32 +298,40 @@ else:
 
 @numba.njit()
 def c_dist2(x,y): 
-    n=3
+    n=6
     return np.sum(np.abs(np.angle(np.exp(x[:n]*1j)/np.exp(y[:n]*1j))))+np.abs(x[n:]-y[n:])
 
 @numba.njit()
 def c_dist3(x,y): 
-    n=3
+    n=6
     tp=np.abs(x[:n]-y[:n])
     tp[tp>np.pi]=tp[tp>np.pi]-2*np.pi
     return np.sum(np.abs(tp))+np.sum(np.abs(x[n:]-y[n:]))
 
+@numba.njit()
+def c_dist4(x,y): 
+    n=6
+    tp=np.abs(x[:n]-y[:n])
+    tp[tp>np.pi]=tp[tp>np.pi]-2*np.pi
+    return np.sum(np.abs(tp))+np.sum(np.abs(x[n:]-y[n:]))
 
-def run_sim(ind):
+def run_sim(ind,cpg_sim_=cpg_sim):
     alpha_range = (0.0,1.0)
-    uv = calculate_var_vec(ind)
-    #print('running simulation with variables:',list(zip(variables,uv)))
-    cpg_sim.sim.updateVariableVector(uv)
     
-    cpg_sim.sim.setAlpha(alpha_range[0])
-    for t in np.arange(0.0,10.0,cpg_sim.dt):
-        cpg_sim.run_step()
+    #print('running simulation with variables:',list(zip(variables,uv)))
+    if ind is not None:
+        uv = calculate_var_vec(ind)
+        cpg_sim_.sim.updateVariableVector(uv)
 
-    out = np.zeros((len(time_vec),len(cpg_sim.neurons)))
+    cpg_sim_.sim.setAlpha(alpha_range[0])
+    for t in np.arange(0.0,10.0,cpg_sim_.dt):
+        cpg_sim_.run_step()
+
+    out = np.zeros((len(time_vec),len(cpg_sim_.neurons)))
 
     for ind_t,alpha in enumerate(alphas):
-        cpg_sim.sim.setAlpha(alpha)
-        act = cpg_sim.run_step()
+        cpg_sim_.sim.setAlpha(alpha)
+        act = cpg_sim_.run_step()
         out[ind_t,:]=act
 
     times = nsim.simulator.calc_on_offsets(time_vec,out)
@@ -413,36 +421,34 @@ def sliced_wasserstein2(X, Y, n_proj=300, seed=0):
         dist += wasserstein_distance(X @ v, Y @ v)
     return dist / n_proj
 
-def evaluate(ind):
-    out,df = run_sim(ind)
-    Xeval=df[['LR_h','hl','diag','frequency']].dropna().values
+def evaluate(ind,cpg_sim_=cpg_sim):
+    out,df = run_sim(ind,cpg_sim_)
+    Xeval=df[['LR_h','hl','diag','hl_r','LR_f','diag_2','frequency']].dropna().values
     Xeval[:,:3] = Xeval[:,:3]*2.0*np.pi
     Xeval[:,-1] = Xeval[:,-1]
     return Xeval
 
-def evaluate_and_score(ind,scoring_fn='hellinger',Xeval_bl=None,kde_bl=None):
-    if scoring_fn not in ['hellinger', 'js', 'sliced_wasserstein']:
-        raise ValueError("scoring_fn must be one of ['hellinger', 'js', 'sliced_wasserstein']")
-    if scoring_fn == 'hellinger' and (kde_bl is None):
-        raise ValueError(" kde_bl must be provided for hellinger distance calculation")
+def evaluate_and_score(ind,scoring_fns=['js'],Xeval_bl=None,kde_bl=None):
     Xeval_ = evaluate(ind)
-    if scoring_fn in ['hellinger','js']:
+    if 'hellinger' in scoring_fns or 'js' in scoring_fns:
         kde = KernelDensity(bandwidth=np.pi/20., metric="pyfunc", metric_params={"func": c_dist3}, algorithm='ball_tree')
         kde.fit(Xeval_)
-        
-    if scoring_fn == 'hellinger': 
+    
+    results = []
+    if 'hellinger' in scoring_fns: 
         dist = hellinger_kde_distance(kde_bl, kde, n=2000)
         print(f'Hellinger distance: {dist}')
-        return dist
-    elif scoring_fn == 'js':
+        results.append(dist)
+    if 'js' in scoring_fns:
         dist = js_mc(kde_bl, kde, n=10000)
         print(f'JS divergence: {dist}')
-        return dist
-    elif scoring_fn == 'sliced_wasserstein':
+        results.append(dist)
+    if 'sliced_wasserstein' in scoring_fns:
         dist = sliced_wasserstein2(Xeval_bl, Xeval_, n_proj=100)
         print(f'Sliced Wasserstein distance: {dist}')
-        return dist
-    
+        results.append(dist)
+    return results
+
 def sobol_sample(type, N_vars=5, m_samples=10,seed=42):
     from scipy.stats import qmc
 
@@ -464,48 +470,92 @@ def sobol_sample(type, N_vars=5, m_samples=10,seed=42):
 
     return samples
 
+def emd_distance(P,Q):
+    import ot
+    n, m = P.shape[0], Q.shape[0]
+    weights_P = np.full(n, 1.0 / n, dtype=float)
+    weights_Q = np.full(m, 1.0 / m, dtype=float)    
+    C = ot.dist(P, Q, metric=c_dist4)
+    emd = ot.emd2(weights_P, weights_Q, C)
+    return emd  
 
-
-    
+def sinkhorn_distance(P,Q):
+    import ot
+    n, m = P.shape[0], Q.shape[0]
+    weights_P = np.full(n, 1.0 / n, dtype=float)
+    weights_Q = np.full(m, 1.0 / m, dtype=float)    
+    C = ot.dist(P, Q, metric=c_dist4)
+    reg = 1e-3  # Regularization parameter
+    sinkhorn_dist = ot.sinkhorn2(weights_P, weights_Q, C, reg)
+    return sinkhorn_dist**0.5
 
 if __name__ == "__main__":
+    
     out_dir = './sensitivity'
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    out_fn = options.s_config_fn.split('/')[-1].split('.')[0]+datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+    out_fn = options.s_config_fn.split('/')[-1].split('.')[0]+"_"+datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
     out_filename = os.path.join(out_dir,out_fn)
     print("Output will be saved to:", out_filename)
+    
+    # either simulate intact model (not updating variables from yaml) or simulate model with standard parameters (sensitivity)
+    do_bl = False
+    if 'comp_intact' in s_config:
+        if s_config['comp_intact']:
+            cpg_sim2 = nsim.simulator(neurons=neurons, filename=filename,dt=0.001)
+            cpg_sim2.initialize_simulator()
+            cpg_sim2.sim.updateParameter('sigmaNoise',sigma)
+            Xeval = evaluate(None,cpg_sim2)
+        else:
+            do_bl = True
+    else:
+        do_bl = True
+    if do_bl:
+        ind = np.ones((N,))
+        Xeval = evaluate(ind)
 
-    # Create a baseline KDE for the evaluation
-    ind = np.ones((N,))
-    Xeval1 = evaluate(ind)
     kde_bl = KernelDensity(bandwidth=np.pi/20., metric="pyfunc",metric_params={"func":c_dist3}, algorithm='ball_tree')
-    kde_bl.fit(Xeval1)
+    kde_bl.fit(Xeval)
 
-    # Sample for train and validation sets
-    sample = sobol_sample('mult',N_vars=N, m_samples=s_config['m_samples'],seed=42)
+    if 'range' in s_config:
+        if isinstance(s_config['range'], list):
+            range = np.array(s_config['range'])
+            sample = sobol_sample('zero_one',N_vars=N, m_samples=s_config['m_samples'],seed=42)
+            sample_val = sobol_sample('zero_one',N_vars=N, m_samples=s_config['m_samples_val'],seed=43)
+            X_train = sample * (range[1] - range[0]) + range[0]
+            X_val = sample_val * (range[1] - range[0]) + range[0]
+        else:
+            print("range specified but not a list")
+            exit(1)
+    elif 'scale_exp' in s_config:
+        # Sample for train and validation sets
+        sample = sobol_sample('mult',N_vars=N, m_samples=s_config['m_samples'],seed=42)
+        
+        sample_val = sobol_sample('mult',N_vars=N, m_samples=s_config['m_samples_val'],seed=43)
+
+        scale = np.log(s_config['scale_exp'])
+        X_train = np.exp(sample * scale)
+        X_val = np.exp(sample_val * scale)
     print("Sample shape:", sample.shape)
-    sample_val = sobol_sample('mult',N_vars=N, m_samples=s_config['m_samples_val'],seed=43)
 
-    scale = np.log(s_config['scale_exp'])
-    X_train = np.exp(sample * scale)
-    X_val = np.exp(sample_val * scale)
-
+    # Print the minimum and maximum values in the training sample for inspection.
+    print("Min of X_train:", np.min(X_train))
+    print("Max of X_train:", np.max(X_train))
     X = np.concatenate((X_train, X_val), axis=0)
-    my_function = lambda x: evaluate_and_score(x, scoring_fn=s_config['scoring_fn'], Xeval_bl=Xeval1, kde_bl=kde_bl)
+    
+    scoring_fns = s_config['scoring_fn'] if isinstance(s_config['scoring_fn'], list) else [s_config['scoring_fn']]
+    my_function = lambda x: evaluate_and_score(x, scoring_fns=scoring_fns, Xeval_bl=Xeval, kde_bl=kde_bl)
+
+    #import IPython;IPython.embed()
     y = list(tqdm(
         futures.map(
-            lambda x: evaluate_and_score(x, scoring_fn=s_config['scoring_fn'], Xeval_bl=Xeval1, kde_bl=kde_bl),
+            my_function,
             X
         ),
         total=len(X),
         desc="Evaluating samples"
     ))
-    #with ProcessPoolExecutor(8) as executor:
-    #    futures = [executor.submit(my_function, x) for x in X]
-    #    y = []
-    #    for f in tqdm(as_completed(futures), total=len(futures)):
-    #        y.append(f.result())
+
 
     y = np.array(y)
     y_train = y[:X_train.shape[0]]
@@ -517,7 +567,7 @@ if __name__ == "__main__":
         s_config['run'] = []
 
     # Determine entry number
-    entry_number = len(s_config['run']) + 1
+    entry_number = len(s_config['run'])
 
     # Create new entry
     run_entry = {
@@ -533,7 +583,7 @@ if __name__ == "__main__":
     with open(options.s_config_fn, 'w') as file:
         import yaml
         yaml.dump(s_config, file,default_flow_style=False, sort_keys=False, Dumper=CustomCDumper)
-    import IPython;IPython.embed()
+    
 
     
 
