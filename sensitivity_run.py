@@ -519,11 +519,11 @@ if __name__ == "__main__":
 
     if 'range' in s_config:
         if isinstance(s_config['range'], list):
-            range = np.array(s_config['range'])
+            range_ = np.array(s_config['range'])
             sample = sobol_sample('zero_one',N_vars=N, m_samples=s_config['m_samples'],seed=42)
             sample_val = sobol_sample('zero_one',N_vars=N, m_samples=s_config['m_samples_val'],seed=43)
-            X_train = sample * (range[1] - range[0]) + range[0]
-            X_val = sample_val * (range[1] - range[0]) + range[0]
+            X_train = sample * (range_[1] - range_[0]) + range_[0]
+            X_val = sample_val * (range_[1] - range_[0]) + range_[0]
         else:
             print("range specified but not a list")
             exit(1)
