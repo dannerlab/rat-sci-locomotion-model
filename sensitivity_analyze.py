@@ -281,7 +281,7 @@ if __name__ == "__main__":
         model.fit(
             X_train, y_train_i,
             eval_set=[(X_val, y_val_i)],
-            verbose=True
+            verbose=False
         )
         
         r2_train = r2_score(y_train_i, model.predict(X_train))
