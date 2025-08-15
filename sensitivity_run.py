@@ -12,6 +12,23 @@ from sklearn.metrics import r2_score
 from scoop import futures 
 from tqdm import tqdm
 import yaml 
+import ot
+import time
+
+@numba.njit()
+def c_dist2(x,y): 
+    n=6
+    return np.sum(np.abs(np.angle(np.exp(x[:n]*1j)/np.exp(y[:n]*1j))))+np.abs(x[n:]-y[n:])
+
+@numba.njit()
+def c_dist3(x,y): 
+    n=6
+    tp=np.abs(x[:n]-y[:n])
+    tp[tp>np.pi]=tp[tp>np.pi]-2*np.pi
+    return np.sum(np.abs(tp))+np.sum(np.abs(x[n:]-y[n:]))
+
+
+dist_metric = c_dist3
 #from concurrent.futures import ProcessPoolExecutor, as_completed
 
 class CustomCDumper(yaml.CDumper):
@@ -296,25 +313,6 @@ else:
     raise ValueError("update_method must be either 'variable_groups' or 'variables'")
     
 
-@numba.njit()
-def c_dist2(x,y): 
-    n=6
-    return np.sum(np.abs(np.angle(np.exp(x[:n]*1j)/np.exp(y[:n]*1j))))+np.abs(x[n:]-y[n:])
-
-@numba.njit()
-def c_dist3(x,y): 
-    n=6
-    tp=np.abs(x[:n]-y[:n])
-    tp[tp>np.pi]=tp[tp>np.pi]-2*np.pi
-    return np.sum(np.abs(tp))+np.sum(np.abs(x[n:]-y[n:]))
-
-@numba.njit()
-def c_dist4(x,y): 
-    n=6
-    tp=np.abs(x[:n]-y[:n])
-    tp[tp>np.pi]=tp[tp>np.pi]-2*np.pi
-    return np.sum(np.abs(tp))+np.sum(np.abs(x[n:]-y[n:]))
-
 def run_sim(ind,cpg_sim_=cpg_sim):
     alpha_range = (0.0,1.0)
     
@@ -347,8 +345,11 @@ def run_sim(ind,cpg_sim_=cpg_sim):
             break
     
     df_times = create_times_df(times)
-    df = calc_phase_df(df_times)
-    return out,df
+    unique_counts = df_times.groupby('leg').apply(lambda x: x.shape[0],include_groups=False)
+    lrh_ratio = unique_counts[0] / unique_counts[1]
+    ref_limb = 0 if lrh_ratio > 1 else 1
+    df = calc_phase_df(df_times,ref_limb)
+    return out,df,unique_counts
 
 
 
@@ -421,32 +422,56 @@ def sliced_wasserstein2(X, Y, n_proj=300, seed=0):
         dist += wasserstein_distance(X @ v, Y @ v)
     return dist / n_proj
 
+def emd_distance(P,Q):
+
+    n, m = P.shape[0], Q.shape[0]
+    weights_P = np.full(n, 1.0 / n, dtype=float)
+    weights_Q = np.full(m, 1.0 / m, dtype=float)    
+    C = ot.dist(P, Q, metric=dist_metric)
+    emd = ot.emd2(weights_P, weights_Q, C)
+    return emd  
+
+def sinkhorn_distance(P,Q):
+
+    n, m = P.shape[0], Q.shape[0]
+    weights_P = np.full(n, 1.0 / n, dtype=float)
+    weights_Q = np.full(m, 1.0 / m, dtype=float)    
+    C = ot.dist(P, Q, metric=dist_metric)
+    reg = 1e-3  # Regularization parameter
+    sinkhorn_dist = ot.sinkhorn2(weights_P, weights_Q, C, reg)
+    return sinkhorn_dist
+
 def evaluate(ind,cpg_sim_=cpg_sim):
-    out,df = run_sim(ind,cpg_sim_)
+    out,df,unique_steps = run_sim(ind,cpg_sim_)
     Xeval=df[['LR_h','hl','diag','hl_r','LR_f','diag_2','frequency']].dropna().values
     Xeval[:,:3] = Xeval[:,:3]*2.0*np.pi
     Xeval[:,-1] = Xeval[:,-1]
-    return Xeval
+    return Xeval,unique_steps
 
 def evaluate_and_score(ind,scoring_fns=['js'],Xeval_bl=None,kde_bl=None):
-    Xeval_ = evaluate(ind)
+    Xeval_,unique_steps = evaluate(ind)
     if 'hellinger' in scoring_fns or 'js' in scoring_fns:
-        kde = KernelDensity(bandwidth=np.pi/20., metric="pyfunc", metric_params={"func": c_dist3}, algorithm='ball_tree')
+        kde = KernelDensity(bandwidth=np.pi/20., metric="pyfunc", metric_params={"func": dist_metric}, algorithm='ball_tree')
         kde.fit(Xeval_)
     
     results = []
-    if 'hellinger' in scoring_fns: 
-        dist = hellinger_kde_distance(kde_bl, kde, n=2000)
-        print(f'Hellinger distance: {dist}')
-        results.append(dist)
-    if 'js' in scoring_fns:
-        dist = js_mc(kde_bl, kde, n=10000)
-        print(f'JS divergence: {dist}')
-        results.append(dist)
-    if 'sliced_wasserstein' in scoring_fns:
-        dist = sliced_wasserstein2(Xeval_bl, Xeval_, n_proj=100)
-        print(f'Sliced Wasserstein distance: {dist}')
-        results.append(dist)
+    dist_fns = {
+        'hellinger': lambda: hellinger_kde_distance(kde_bl, kde, n=2000),
+        'js': lambda: js_mc(kde_bl, kde, n=10000),
+        'sliced_wasserstein': lambda: sliced_wasserstein2(Xeval_bl, Xeval_, n_proj=100),
+        'emd': lambda: emd_distance(Xeval_bl, Xeval_),
+        'sinkhorn': lambda: sinkhorn_distance(Xeval_bl, Xeval_)
+    }
+    for fn in scoring_fns:
+        if fn in dist_fns:
+            t0 = time.time()
+            dist = dist_fns[fn]()
+            t1 = time.time()
+            print(f"{fn} distance: {dist} (time: {t1-t0:.3f}s)")
+            results.append(dist)
+    for i in range(4):
+        results.append(unique_steps[i])
+    #print("Unique steps per leg COV:\n", unique_steps.std()/ unique_steps.mean())
     return results
 
 def sobol_sample(type, N_vars=5, m_samples=10,seed=42):
@@ -470,24 +495,7 @@ def sobol_sample(type, N_vars=5, m_samples=10,seed=42):
 
     return samples
 
-def emd_distance(P,Q):
-    import ot
-    n, m = P.shape[0], Q.shape[0]
-    weights_P = np.full(n, 1.0 / n, dtype=float)
-    weights_Q = np.full(m, 1.0 / m, dtype=float)    
-    C = ot.dist(P, Q, metric=c_dist4)
-    emd = ot.emd2(weights_P, weights_Q, C)
-    return emd  
 
-def sinkhorn_distance(P,Q):
-    import ot
-    n, m = P.shape[0], Q.shape[0]
-    weights_P = np.full(n, 1.0 / n, dtype=float)
-    weights_Q = np.full(m, 1.0 / m, dtype=float)    
-    C = ot.dist(P, Q, metric=c_dist4)
-    reg = 1e-3  # Regularization parameter
-    sinkhorn_dist = ot.sinkhorn2(weights_P, weights_Q, C, reg)
-    return sinkhorn_dist**0.5
 
 if __name__ == "__main__":
     
@@ -505,16 +513,16 @@ if __name__ == "__main__":
             cpg_sim2 = nsim.simulator(neurons=neurons, filename=filename,dt=0.001)
             cpg_sim2.initialize_simulator()
             cpg_sim2.sim.updateParameter('sigmaNoise',sigma)
-            Xeval = evaluate(None,cpg_sim2)
+            Xeval,unique_steps = evaluate(None,cpg_sim2)
         else:
             do_bl = True
     else:
         do_bl = True
     if do_bl:
         ind = np.ones((N,))
-        Xeval = evaluate(ind)
+        Xeval,unique_steps = evaluate(ind)
 
-    kde_bl = KernelDensity(bandwidth=np.pi/20., metric="pyfunc",metric_params={"func":c_dist3}, algorithm='ball_tree')
+    kde_bl = KernelDensity(bandwidth=np.pi/20., metric="pyfunc",metric_params={"func":dist_metric}, algorithm='ball_tree')
     kde_bl.fit(Xeval)
 
     if 'range' in s_config:
@@ -561,7 +569,7 @@ if __name__ == "__main__":
     y_train = y[:X_train.shape[0]]
     y_val = y[X_train.shape[0]:]
 
-    np.savez(out_filename, X=X, y=y, X_train=X_train, X_val=X_val, y_train=y_train, y_val=y_val,par_names=par_names,variables=variables,variable_groups=variable_groups,scale_exp=s_config['scale_exp'],s_config_fn=options.s_config_fn)
+    np.savez(out_filename, X=X, y=y, X_train=X_train, X_val=X_val, y_train=y_train, y_val=y_val,par_names=par_names,variables=variables,variable_groups=variable_groups,s_config_fn=options.s_config_fn)
     # Check if 'run' exists in s_config, if not create it
     if 'run' not in s_config or not isinstance(s_config['run'], list):
         s_config['run'] = []
