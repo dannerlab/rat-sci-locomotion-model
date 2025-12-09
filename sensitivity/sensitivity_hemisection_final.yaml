@@ -1,0 +1,107 @@
+model_yaml: ./models/config_hemi_final.yaml
+m_samples: 13
+m_samples_val: 9
+update_method: variable_groups
+scoring_fn: [emd]
+scale_exp: 1.25
+variable_groups:
+  ipsilesional_hind_RGF_drive: [drive_to_RGF_h_R]
+  V0_fore: [inV0VtoRGF_f_L, inV0VtoRGF_f_R, V0DtoRGF_f_L, V0DtoRGF_f_R]
+  V3_fore: [V3EtoRGE_f_L, V3EtoRGE_f_R]
+  LPN_hemi_vars: [aV3diagtoRGF_L, dV0DdiagtoRGF_L, dV0VdiagtoRGF_L, aSh2toRGF_R, dSh2toRGF_R,
+    dLPNitoRGF_R]
+  LPN_intact_vars: [aV3diagtoRGF_R, dV0DdiagtoRGF_R, dV0VdiagtoRGF_R, aSh2toRGF_L,
+    dSh2toRGF_L, dLPNitoRGF_L]
+  V0_hind: [inV0VtoRGF_h_L, inV0VtoRGF_h_R, V0DtoRGF_h_L, V0DtoRGF_h_R]
+  V3_hind: [V3EtoRGE_h_L, V3EtoRGE_h_R, InV3EtoRGF_h_L, InV3EtoRGF_h_R, V3FtoRGF_h_L,
+    V3FtoRGF_h_R]
+run:
+- entry: 0
+  out_filename: ./sensitivity/hemisection_vX_2025-12-09-08-54-16
+  datetime: '2025-12-09 09:49:22'
+  emd:
+    xgboost_r2:
+      train: 0.9879135389092211
+      val: 0.9498713005425579
+    sobol:
+      S1:
+        ipsilesional_hind_RGF_drive: 0.8143472568664581
+        V0_fore: 0.005200663368638863
+        V3_fore: 0.00042946574837391635
+        LPN_hemi_vars: 0.004076663256440917
+        LPN_intact_vars: 0.000963294021595398
+        V0_hind: 0.044070488948535706
+        V3_hind: 0.048480859819171246
+      S1_conf:
+        ipsilesional_hind_RGF_drive: 0.01824158083936588
+        V0_fore: 0.002097267562202351
+        V3_fore: 0.0006560559372428665
+        LPN_hemi_vars: 0.0022879032053610237
+        LPN_intact_vars: 0.0019661299658285916
+        V0_hind: 0.0066153286911621745
+        V3_hind: 0.006404309558210854
+      ST:
+        ipsilesional_hind_RGF_drive: 0.8855840821622079
+        V0_fore: 0.011213072579244057
+        V3_fore: 0.0010823507395065703
+        LPN_hemi_vars: 0.012212181711372986
+        LPN_intact_vars: 0.00957733168614783
+        V0_hind: 0.08797705971835959
+        V3_hind: 0.09301265992989928
+      ST_conf:
+        ipsilesional_hind_RGF_drive: 0.015482718058076108
+        V0_fore: 0.0003317849342871784
+        V3_fore: 3.0619465811424703e-05
+        LPN_hemi_vars: 0.00040706738022511913
+        LPN_intact_vars: 0.0003170287506744013
+        V0_hind: 0.0028436676328312854
+        V3_hind: 0.003355890733130421
+      S2:
+        ipsilesional_hind_RGF_drive x V0_fore: 0.0036357522296603115
+        ipsilesional_hind_RGF_drive x V3_fore: -0.00019822027334785128
+        ipsilesional_hind_RGF_drive x LPN_hemi_vars: 0.005592673666855829
+        ipsilesional_hind_RGF_drive x LPN_intact_vars: 0.006569784657241504
+        ipsilesional_hind_RGF_drive x V0_hind: 0.0195803442843221
+        ipsilesional_hind_RGF_drive x V3_hind: 0.021306717980848294
+        V0_fore x V3_fore: -0.00020744741361118229
+        V0_fore x LPN_hemi_vars: 0.00018140058895195228
+        V0_fore x LPN_intact_vars: -0.00027641864578302196
+        V0_fore x V0_hind: -0.00044792079813654045
+        V0_fore x V3_hind: -0.0001351782548524999
+        V3_fore x LPN_hemi_vars: -4.382477531170159e-05
+        V3_fore x LPN_intact_vars: -0.00019462173456599122
+        V3_fore x V0_hind: -7.964351773703804e-05
+        V3_fore x V3_hind: -2.853739674227307e-05
+        LPN_hemi_vars x LPN_intact_vars: -0.0003946520785895501
+        LPN_hemi_vars x V0_hind: -9.006721232790449e-05
+        LPN_hemi_vars x V3_hind: 0.0004754512469789876
+        LPN_intact_vars x V0_hind: 0.0007102544838348476
+        LPN_intact_vars x V3_hind: 0.0007104078827633448
+        V0_hind x V3_hind: 0.00881395834815265
+      S2_conf:
+        ipsilesional_hind_RGF_drive x V0_fore: 0.02186509620533915
+        ipsilesional_hind_RGF_drive x V3_fore: 0.021919250847042857
+        ipsilesional_hind_RGF_drive x LPN_hemi_vars: 0.022167333673085446
+        ipsilesional_hind_RGF_drive x LPN_intact_vars: 0.021732128802708316
+        ipsilesional_hind_RGF_drive x V0_hind: 0.023247434340041603
+        ipsilesional_hind_RGF_drive x V3_hind: 0.02129629313688783
+        V0_fore x V3_fore: 0.0035738459888620113
+        V0_fore x LPN_hemi_vars: 0.0035513975293191527
+        V0_fore x LPN_intact_vars: 0.003604974407733807
+        V0_fore x V0_hind: 0.003629400769388792
+        V0_fore x V3_hind: 0.0035185598486986674
+        V3_fore x LPN_hemi_vars: 0.0011150400864767616
+        V3_fore x LPN_intact_vars: 0.0011147647696751303
+        V3_fore x V0_hind: 0.0010621902263220266
+        V3_fore x V3_hind: 0.0010876752363677524
+        LPN_hemi_vars x LPN_intact_vars: 0.0034335389574422213
+        LPN_hemi_vars x V0_hind: 0.0033139783692719958
+        LPN_hemi_vars x V3_hind: 0.003356636539127784
+        LPN_intact_vars x V0_hind: 0.003070271363521661
+        LPN_intact_vars x V3_hind: 0.002941689454307204
+        V0_hind x V3_hind: 0.008250547305636444
+    metadata:
+      n_samples: 8192
+      n_samples_val: 512
+      range: [0.8000012472452424, 1.2499913329542198]
+      y_range: [0.68622831932263, 7.112908316453141]

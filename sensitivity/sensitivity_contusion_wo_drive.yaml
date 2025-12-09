@@ -1,0 +1,89 @@
+model_yaml: ./models/config_contusion_final.yaml
+m_samples: 13
+m_samples_val: 9
+update_method: variable_groups
+scoring_fn: [emd]
+scale_exp: 1.25
+variable_groups:
+  V0_fore: [inV0VtoRGF_f_L, inV0VtoRGF_f_R, V0DtoRGF_f_L, V0DtoRGF_f_R]
+  V3_fore: [V3EtoRGE_f_L, V3EtoRGE_f_R]
+  LAPN: [aSh2toRGF_L, aSh2toRGF_R, aV3diagtoRGF_L, aV3diagtoRGF_R]
+  LDPN: [dLPNitoRGF_L, dLPNitoRGF_R, dSh2toRGF_L, dSh2toRGF_R, dV0DdiagtoRGF_L, dV0DdiagtoRGF_R,
+    dV0VdiagtoRGF_L, dV0VdiagtoRGF_R]
+  V0_hind: [inV0VtoRGF_h_L, inV0VtoRGF_h_R, V0DtoRGF_h_L, V0DtoRGF_h_R]
+  V3_hind: [V3EtoRGE_h_L, V3EtoRGE_h_R, InV3EtoRGF_h_L, InV3EtoRGF_h_R, V3FtoRGF_h_L,
+    V3FtoRGF_h_R]
+run:
+- entry: 1
+  out_filename: ./sensitivity/contusion_vXa_2025-12-09-12-28-20
+  datetime: '2025-12-09 13:22:00'
+  emd:
+    xgboost_r2:
+      train: 0.9490361031586345
+      val: 0.8934524786157524
+    sobol:
+      S1:
+        V0_fore: 0.06645775405931904
+        V3_fore: -4.2832908477237254e-07
+        LAPN: 0.0009651751364427372
+        LDPN: 0.0005578292279678342
+        V0_hind: 0.2723214768096807
+        V3_hind: 0.025677766859781435
+      S1_conf:
+        V0_fore: 0.011360447906182314
+        V3_fore: 0.001440639481835444
+        LAPN: 0.0015897209784544507
+        LDPN: 0.0017367791208416983
+        V0_hind: 0.0223624435366549
+        V3_hind: 0.016028504507507247
+      ST:
+        V0_fore: 0.295064523600479
+        V3_fore: 0.0035964763862491532
+        LAPN: 0.005806658303522306
+        LDPN: 0.005640464105241511
+        V0_hind: 0.8785821861347064
+        V3_hind: 0.46319187316101423
+      ST_conf:
+        V0_fore: 0.008893968045021867
+        V3_fore: 0.00010465271594135384
+        LAPN: 0.0001609658174906257
+        LDPN: 0.00017818728968727653
+        V0_hind: 0.02098863921511974
+        V3_hind: 0.013156420647504342
+      S2:
+        V0_fore x V3_fore: 0.0017920437621414705
+        V0_fore x LAPN: 0.0026691510018741833
+        V0_fore x LDPN: 0.0026764885179986356
+        V0_fore x V0_hind: 0.18859415914900646
+        V0_fore x V3_hind: 0.016677405584854612
+        V3_fore x LAPN: 0.000585411527637002
+        V3_fore x LDPN: 0.0007422053445395272
+        V3_fore x V0_hind: 0.0010932092622251144
+        V3_fore x V3_hind: 0.000569297004979076
+        LAPN x LDPN: 0.0014070963930953716
+        LAPN x V0_hind: 0.001173467108426418
+        LAPN x V3_hind: 0.0001343172685243886
+        LDPN x V0_hind: 0.0007345433813453206
+        LDPN x V3_hind: 0.0013198150118020856
+        V0_hind x V3_hind: 0.3966614255424744
+      S2_conf:
+        V0_fore x V3_fore: 0.013118962717719894
+        V0_fore x LAPN: 0.01299686331548062
+        V0_fore x LDPN: 0.013271797961805644
+        V0_fore x V0_hind: 0.01593450417006991
+        V0_fore x V3_hind: 0.013298110298313045
+        V3_fore x LAPN: 0.001827934710778324
+        V3_fore x LDPN: 0.0018219996019341615
+        V3_fore x V0_hind: 0.002054420268286832
+        V3_fore x V3_hind: 0.001960280733809305
+        LAPN x LDPN: 0.002392612663772249
+        LAPN x V0_hind: 0.002524481701319355
+        LAPN x V3_hind: 0.0023261487907171616
+        LDPN x V0_hind: 0.00240280803708896
+        LDPN x V3_hind: 0.0026954034860809163
+        V0_hind x V3_hind: 0.02855453035384414
+    metadata:
+      n_samples: 8192
+      n_samples_val: 512
+      range: [0.8000092893802918, 1.2499889544887914]
+      y_range: [0.8251794980992736, 3.7317378738771536]

@@ -1,0 +1,106 @@
+model_yaml: ./models/config_contusion_final.yaml
+m_samples: 13
+m_samples_val: 9
+update_method: variable_groups
+scoring_fn: [emd]
+scale_exp: 1.25
+variable_groups:
+  RGF_drive_vars: [drive_to_RGF_h_L, drive_to_RGF_h_R]
+  V0_fore: [inV0VtoRGF_f_L, inV0VtoRGF_f_R, V0DtoRGF_f_L, V0DtoRGF_f_R]
+  V3_fore: [V3EtoRGE_f_L, V3EtoRGE_f_R]
+  LAPN: [aSh2toRGF_L, aSh2toRGF_R, aV3diagtoRGF_L, aV3diagtoRGF_R]
+  LDPN: [dLPNitoRGF_L, dLPNitoRGF_R, dSh2toRGF_L, dSh2toRGF_R, dV0DdiagtoRGF_L, dV0DdiagtoRGF_R,
+    dV0VdiagtoRGF_L, dV0VdiagtoRGF_R]
+  V0_hind: [inV0VtoRGF_h_L, inV0VtoRGF_h_R, V0DtoRGF_h_L, V0DtoRGF_h_R]
+  V3_hind: [V3EtoRGE_h_L, V3EtoRGE_h_R, InV3EtoRGF_h_L, InV3EtoRGF_h_R, V3FtoRGF_h_L,
+    V3FtoRGF_h_R]
+run:
+- entry: 1
+  out_filename: ./sensitivity/contusion_vX_2025-12-09-10-40-45
+  datetime: '2025-12-09 11:34:04'
+  emd:
+    xgboost_r2:
+      train: 0.9707057524441359
+      val: 0.9371094443958136
+    sobol:
+      S1:
+        RGF_drive_vars: 0.69830795563415
+        V0_fore: 0.0015351964607906517
+        V3_fore: 0.0005977265221067301
+        LAPN: 0.0002415545346788615
+        LDPN: 0.0007882582952974556
+        V0_hind: 0.014685319450403479
+        V3_hind: 0.011668899461485034
+      S1_conf:
+        RGF_drive_vars: 0.020227707336151403
+        V0_fore: 0.0033835174425754402
+        V3_fore: 0.0005095848239192604
+        LAPN: 0.0006005091345409412
+        LDPN: 0.0009103245137632371
+        V0_hind: 0.010335464175868822
+        V3_hind: 0.005293937165002545
+      ST:
+        RGF_drive_vars: 0.9579603368431268
+        V0_fore: 0.019900742352566003
+        V3_fore: 0.0006422065715507096
+        LAPN: 0.000728811177115031
+        LDPN: 0.0015101301445644537
+        V0_hind: 0.21813438091796533
+        V3_hind: 0.07896201940411987
+      ST_conf:
+        RGF_drive_vars: 0.019709950608578157
+        V0_fore: 0.0006303045805995213
+        V3_fore: 2.2640157169185256e-05
+        LAPN: 2.4466386860714967e-05
+        LDPN: 5.150015748439073e-05
+        V0_hind: 0.005771576770448369
+        V3_hind: 0.002714894387250749
+      S2:
+        RGF_drive_vars x V0_fore: 0.017073897292549427
+        RGF_drive_vars x V3_fore: -0.0010861172515924293
+        RGF_drive_vars x LAPN: -0.00038426788646447863
+        RGF_drive_vars x LDPN: -0.0003558741583788601
+        RGF_drive_vars x V0_hind: 0.18868619770111933
+        RGF_drive_vars x V3_hind: 0.05066148553773047
+        V0_fore x V3_fore: -7.781436143901354e-05
+        V0_fore x LAPN: 8.361417798797663e-05
+        V0_fore x LDPN: 1.942554953612255e-05
+        V0_fore x V0_hind: 0.0004142060390636224
+        V0_fore x V3_hind: -0.00010407126429996284
+        V3_fore x LAPN: -0.0005039147846266534
+        V3_fore x LDPN: -0.000451698722931065
+        V3_fore x V0_hind: -0.0005096222103244692
+        V3_fore x V3_hind: -0.00045081588109210577
+        LAPN x LDPN: -2.4614195619991836e-05
+        LAPN x V0_hind: -2.1179194403322943e-05
+        LAPN x V3_hind: -3.5414014996036636e-05
+        LDPN x V0_hind: -0.0003191135482817995
+        LDPN x V3_hind: -0.00029689909944997754
+        V0_hind x V3_hind: 0.013801968660220897
+      S2_conf:
+        RGF_drive_vars x V0_fore: 0.02132036324443776
+        RGF_drive_vars x V3_fore: 0.020841945682013908
+        RGF_drive_vars x LAPN: 0.020920223315676188
+        RGF_drive_vars x LDPN: 0.020856728755622448
+        RGF_drive_vars x V0_hind: 0.02385252131555268
+        RGF_drive_vars x V3_hind: 0.021423660212674566
+        V0_fore x V3_fore: 0.003992298136213663
+        V0_fore x LAPN: 0.003992797930845169
+        V0_fore x LDPN: 0.004013450304200096
+        V0_fore x V0_hind: 0.004582361475797766
+        V0_fore x V3_hind: 0.003975034167982853
+        V3_fore x LAPN: 0.0006821354315823857
+        V3_fore x LDPN: 0.0006826162829624774
+        V3_fore x V0_hind: 0.0006885554610758057
+        V3_fore x V3_hind: 0.0006784934254680509
+        LAPN x LDPN: 0.0009389594923953058
+        LAPN x V0_hind: 0.000878354165567047
+        LAPN x V3_hind: 0.0009521557880957962
+        LDPN x V0_hind: 0.0012997049704357754
+        LDPN x V3_hind: 0.0012149926336826118
+        V0_hind x V3_hind: 0.012977021207654933
+    metadata:
+      n_samples: 8192
+      n_samples_val: 512
+      range: [0.8000012472452424, 1.2499913329542198]
+      y_range: [0.841650521332875, 5.739965736034882]

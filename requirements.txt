@@ -8,3 +8,7 @@ lmfit
 pyyaml
 tables
 scikit-learn
+scoop
+SALib
+tqdm
+xgboost
