@@ -8,7 +8,6 @@ from yaml_sim import update_sim_from_yaml,yamlload
 from scipy.special import rel_entr
 import os
 from datetime import datetime
-from sklearn.metrics import r2_score
 from scoop import futures 
 from tqdm import tqdm
 import yaml 
@@ -29,18 +28,14 @@ def c_dist3(x,y):
 
 
 dist_metric = c_dist3
-#from concurrent.futures import ProcessPoolExecutor, as_completed
 
 class CustomCDumper(yaml.CDumper):
     """ Custom YAML CDumper that forces sequences (lists) to be in flow style []. """
-# Function to check if all_ elements in a list are primitive (str, int, float, bool, None)
 def is_primitive_list(lst):
     return all(isinstance(item, (str, int, float, bool, type(None))) for item in lst)
-# Custom representer for lists
 def represent_list(dumper, data):
     flow_style = is_primitive_list(data)  # Use `[]` only for primitive lists
     return dumper.represent_sequence("tag:yaml.org,2002:seq", data, flow_style=flow_style)
-# Register the custom representer for lists
 CustomCDumper.add_representer(list, represent_list)
 
 def clean_times(times,thr=0.02):
@@ -110,9 +105,7 @@ def calc_phase_df(df,ref_leg=0,crit = 'midstance',phase_diffs = [(0,1),(0,2),(0,
     df_out = pd.DataFrame({})
     if np.sum(np.diff(df.iloc[:4][crit])) < 0.01:
         df=df[4:]
-    ref=df[df.leg==ref_leg].iloc[:-1]
-    #if not np.all(np.isin(np.setdiff1d([0,1,2,3],ref_leg),df[ref.tail(1).index.item():].leg)):
-    #    ref=ref.iloc[:-1]                                         
+    ref=df[df.leg==ref_leg].iloc[:-1]                                   
     phase_dur = ref.swing_dur+ref.stance_dur
     M=np.ones((len(ref),4))*np.nan
     for i, (index,row) in enumerate(ref.iterrows()):
@@ -126,8 +119,7 @@ def calc_phase_df(df,ref_leg=0,crit = 'midstance',phase_diffs = [(0,1),(0,2),(0,
                 if int(nr.leg) == l:
                     M[i][l] = k+index+1
                     break
-    
-    phases=np.zeros((len(ref),len(phase_diffs)))
+
     for i,(x,y) in enumerate(phase_diffs):
         with np.errstate(invalid='ignore'):
             df_out[phase_names[i]] =((np.array(df.reindex(M[:,y])[crit])-np.array(df.reindex(M[:,x])[crit]))/np.array(phase_dur)) % 1.0
@@ -197,16 +189,7 @@ cpg_sim.initialize_simulator()
 dur = 50. # duration of the ramp up/down
 N_rep = 2 
 alpha_range_reduction = 0.0 
-sigma0 = 0.1
-exp_color = '0.8'
-min_fr = 0
-max_fr = 7.5
-max_phase = 0.3
-s_sci = 8
-s_sci1 = 5
-s_sim = 1.5
-s_sim1 = 1.5
-t_size = 5
+
     
 do_sample = False
 
@@ -219,6 +202,9 @@ if config_sim['type'] in ['up_down','up_hold_down','up_up_down']:
     
     dur = config_sim['duration'] # duration of the ramp up/down
     N_rep = config_sim['N_rep'] # number of repetitions of the ramp up and down
+    if 'N_rep_mult' in s_config:
+        N_rep = int(N_rep * s_config['N_rep_mult'])
+        print("N_rep set to:", N_rep)
     alpha_range_reduction = config_sim['alpha_range_reduction'] # reduction of the lower extreme of alpha during the up/down ramp (except first and last ramp)
     hold_dur = dur
     if config_sim['type'] == 'up_hold_down':
@@ -277,17 +263,10 @@ if do_updown:
     time_vec = np.arange(0.0,len(alphas)*cpg_sim.dt,cpg_sim.dt)
 
 variable_groups = s_config["variable_groups"]
-#import IPython;IPython.embed()
-#variable_groups = {list(v.keys())[0]:v[list(v.keys())[0]] for v in variable_groups}
-
-#variable_groups = {k:v for k,v in variable_groups.items() if "drive" not in k}
-
 variables = [ v for group in variable_groups.values() for v in group ]
 group_lens = [len(group) for group in variable_groups.values()]
 
-
 IV=np.array(cpg_sim.sim.setupVariableVector(variables))
-#print(list(zip(variables,IV)))
 
 
 update_method = s_config['update_method']
@@ -315,8 +294,6 @@ else:
 
 def run_sim(ind,cpg_sim_=cpg_sim):
     alpha_range = (0.0,1.0)
-    
-    #print('running simulation with variables:',list(zip(variables,uv)))
     if ind is not None:
         uv = calculate_var_vec(ind)
         cpg_sim_.sim.updateVariableVector(uv)
@@ -370,7 +347,6 @@ def js_mc(kde_p, kde_q, n=10000, rng=None):
     return 0.5 * (kl_p + kl_q)
 
 def hellinger_kde_distance(kde_p, kde_q, n=10000, rng=None):
-
     sp = kde_p.sample(n)
     log_p, log_q = kde_p.score_samples(sp), kde_q.score_samples(sp)
     inner_p = np.mean(np.exp(0.5 * (log_q - log_p)))   # E_p[√(q/p)]
@@ -407,7 +383,6 @@ def sliced_wasserstein(kde_p, kde_q, d, n_samples=1000, n_projections=20, rng=No
         samp_p = kde_p.sample(n_samples // 2) @ v
         samp_q = kde_q.sample(n_samples // 2) @ v
         distances.append(wasserstein_distance(samp_p, samp_q))
-        #distances.append(wasserstein_distance(samp_q, samp_p))
 
     return float(np.mean(distances))
 
@@ -423,7 +398,6 @@ def sliced_wasserstein2(X, Y, n_proj=300, seed=0):
     return dist / n_proj
 
 def emd_distance(P,Q):
-
     n, m = P.shape[0], Q.shape[0]
     weights_P = np.full(n, 1.0 / n, dtype=float)
     weights_Q = np.full(m, 1.0 / m, dtype=float)    
@@ -432,7 +406,6 @@ def emd_distance(P,Q):
     return emd  
 
 def sinkhorn_distance(P,Q):
-
     n, m = P.shape[0], Q.shape[0]
     weights_P = np.full(n, 1.0 / n, dtype=float)
     weights_Q = np.full(m, 1.0 / m, dtype=float)    
@@ -442,13 +415,13 @@ def sinkhorn_distance(P,Q):
     return sinkhorn_dist
 
 def evaluate(ind,cpg_sim_=cpg_sim):
-    out,df,unique_steps = run_sim(ind,cpg_sim_)
+    _,df,unique_steps = run_sim(ind,cpg_sim_)
     Xeval=df[['LR_h','hl','diag','hl_r','LR_f','diag_2','frequency']].dropna().values
-    Xeval[:,:3] = Xeval[:,:3]*2.0*np.pi
+    Xeval[:,:6] = Xeval[:,:6]*2.0*np.pi
     Xeval[:,-1] = Xeval[:,-1]
     return Xeval,unique_steps
 
-def evaluate_and_score(ind,scoring_fns=['js'],Xeval_bl=None,kde_bl=None):
+def evaluate_and_score(ind,scoring_fns=['emd'],Xeval_bl=None,kde_bl=None):
     Xeval_,unique_steps = evaluate(ind)
     if 'hellinger' in scoring_fns or 'js' in scoring_fns:
         kde = KernelDensity(bandwidth=np.pi/20., metric="pyfunc", metric_params={"func": dist_metric}, algorithm='ball_tree')
@@ -471,34 +444,29 @@ def evaluate_and_score(ind,scoring_fns=['js'],Xeval_bl=None,kde_bl=None):
             results.append(dist)
     for i in range(4):
         results.append(unique_steps[i])
-    #print("Unique steps per leg COV:\n", unique_steps.std()/ unique_steps.mean())
+
     return results
 
 def sobol_sample(type, N_vars=5, m_samples=10,seed=42):
     from scipy.stats import qmc
 
-    # 1.  Define the parameter space (lower, upper) for each of d parameters
     if type == 'mult':
         param_bounds = np.array([[-1,  1]]* N_vars)
     elif type == 'zero_one':
         param_bounds = np.array([[0, 1]]* N_vars)
     
-    d = param_bounds.shape[0]
+    d = N_vars
 
-    # 3.  Build a scrambled Sobol engine and generate points in [0,1]^d
     engine = qmc.Sobol(d, scramble=True, seed=seed)
     u = engine.random_base2(m=m_samples)          # shape (2**m, d)
 
-    # 4.  Affine map to parameter ranges
     lower, upper = param_bounds[:,0], param_bounds[:,1]
-    samples = lower + u * (upper - lower)   # shape (N, d)
 
-    return samples
+    return lower + u * (upper - lower) 
 
 
 
 if __name__ == "__main__":
-    
     out_dir = './sensitivity'
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -569,7 +537,9 @@ if __name__ == "__main__":
     y_train = y[:X_train.shape[0]]
     y_val = y[X_train.shape[0]:]
 
+    # Save results
     np.savez(out_filename, X=X, y=y, X_train=X_train, X_val=X_val, y_train=y_train, y_val=y_val,par_names=par_names,variables=variables,variable_groups=variable_groups,s_config_fn=options.s_config_fn)
+   
     # Check if 'run' exists in s_config, if not create it
     if 'run' not in s_config or not isinstance(s_config['run'], list):
         s_config['run'] = []
@@ -583,7 +553,8 @@ if __name__ == "__main__":
         'out_filename': out_filename,
         'datetime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
-
+    if 'N_rep_mult' in s_config:
+        run_entry['N_rep_mult'] = s_config['N_rep_mult']
     # Append entry
     s_config['run'].append(run_entry)
 
