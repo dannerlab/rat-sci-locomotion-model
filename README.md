@@ -1,7 +1,9 @@
 # rat-sci-locomotion-model
 Simulation code, model files, and data analysis of results presented in:
 
-Shevtosva NA, Lockhart AB, Rybak IA, Magnuson DSK, Danner SM. **Reorganization of spinal neural connectivity following recovery after thoracic spinal cord injury: insights from computational modelling.** *bioRxiv*, 2025.05.17.654682; doi: [10.1101/2025.05.17.654682](https://doi.org/10.1101/2025.05.17.654682)
+Shevtsova NA, Lockhart AB, Rybak IA, Magnuson DSK, Danner SM. **Linking spinal circuit reorganization to recovery after thoracic spinal cord injury.** *eLife*. 2026;14:RP107480. doi: [10.7554/eLife.107480.3](https://doi.org/10.7554/eLife.107480.3)
+
+_Preprint version (earlier title):_ Shevtosva NA, Lockhart AB, Rybak IA, Magnuson DSK, Danner SM. **Reorganization of spinal neural connectivity following recovery after thoracic spinal cord injury: insights from computational modelling.** *bioRxiv*, 2025.05.17.654682; doi: [10.1101/2025.05.17.654682](https://doi.org/10.1101/2025.05.17.654682)
 
 
 ## Installation
